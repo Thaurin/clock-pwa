@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Clock PWA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="manifest.json">
+    <style>
+      @font-face {
+          font-family: 'Orbitron';
+          src: url('./Orbitron-VariableFont_wght.ttf') format('truetype');
+          font-weight: 100 900;
+          font-display: swap;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #111;
+        color: #fff;
+        width: 100vw;
+        height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      #clock {
+        font-family: 'Orbitron', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        width: 100vw;
+        white-space: nowrap;
+      }
+      #clock-measure {
+        position: absolute;
+        visibility: hidden;
+        white-space: nowrap;
+        left: -9999px;
+        font-family: 'Orbitron', sans-serif;
+      }
+    </style>
+    <link rel="preload" href="Orbitron-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+  </head>
+  <body>
+    <div id="clock">88:88</div>
+    <span id="clock-measure"></span>
+    <script>
+      const clock = document.getElementById('clock');
+      const measure = document.getElementById('clock-measure');
+
+      function updateClock() {
+        const clockStr = new Date().toLocaleTimeString("nl-NL", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        });
+        clock.textContent = clockStr;
+        fitClockToWidth(clockStr);
+
+        const now = new Date();
+        const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+        setTimeout(updateClock, msToNextMinute + 50);
+      }
+
+      function fitClockToWidth(text) {
+        measure.textContent = text;
+        let fontSize = window.innerHeight;
+        measure.style.fontSize = fontSize + 'px';
+        let measureWidth = measure.offsetWidth;
+        const maxWidth = window.innerWidth * 0.98;
+
+        let min = 10, max = fontSize;
+        while (min < max - 1) {
+          let mid = Math.floor((min + max) / 2);
+          measure.style.fontSize = mid + 'px';
+          measureWidth = measure.offsetWidth;
+          if (measureWidth > maxWidth) {
+            max = mid;
+          } else {
+            min = mid;
+          }
+        }
+        clock.style.fontSize = min + 'px';
+      }
+
+      function onResizeOrRotate() {
+        fitClockToWidth(clock.textContent);
+      }
+
+      window.addEventListener('resize', onResizeOrRotate);
+      window.addEventListener('orientationchange', onResizeOrRotate);
+
+      if (document.fonts) {
+        document.fonts.ready.then(() => {
+          updateClock();
+        });
+      } else {
+        window.onload = () => {
+          updateClock();
+        };
+      }
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
+  </body>
+</html>
